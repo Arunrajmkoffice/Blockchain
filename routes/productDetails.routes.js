@@ -6,13 +6,35 @@ const router = Router();
 router.use(authenticateToken);
 
 router.post("/", async (req, res) => {
-  const { product, price, tracking } = req.body;
+  const {
+    product,
+    price,
+    sku,
+    branchNumber,
+    countryOfOrigin,
+    inventory,
+    description,
+    tag,
+    brand,
+    category,
+    salesPrice,
+    image
+  } = req.body;
 
- 
-
-
- 
-  if (!product || !price || !tracking) {
+  if (
+    !product ||
+    !price ||
+    !sku ||
+    !branchNumber ||
+    !countryOfOrigin ||
+    !inventory ||
+    !description ||
+    !tag ||
+    !brand ||
+    !category ||
+    !salesPrice ||
+    !image
+  ) {
     return res.status(400).json({
       success: false,
       message: "All fields (product, price, tracking) are mandatory",
@@ -30,10 +52,49 @@ router.post("/", async (req, res) => {
     }
 
 
+  let data =  [ {
+      "productAt": "Us Warehouse",
+      "date": new Date().toISOString().slice(0, 10),
+      "time": new Date().toLocaleTimeString(),
+      "complete": true
+    },
+    {
+      "productAt": "Medorna Office",
+      "date": "",
+      "time": "",
+      "complete": false
+      
+    },
+    {
+      "productAt": "",
+      "date": "",
+      "time": "",
+      "complete": false
+     
+    },
+    {
+      "productAt": "Amazone",
+      "date": "",
+      "time": "",
+      "complete": false
+     
+    }]
+
+
     const newProduct = new productDetailsModel({
       product: product,
       price: price,
-      tracking: tracking 
+      tracking: data,
+      sku: sku,
+      branchNumber: branchNumber,
+      countryOfOrigin: countryOfOrigin,
+      inventory: inventory,
+      description: description,
+      tag: tag,
+      brand: brand,
+      category: category,
+      salesPrice:salesPrice,
+      image:image
     });
 
     await newProduct.save();
@@ -116,8 +177,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-
-
 router.patch("/:id", async (req, res) => {
   const productId = req.params.id;
   const { role } = req.body;
@@ -132,7 +191,9 @@ router.patch("/:id", async (req, res) => {
       });
     }
 
-    const matchingTrack = product.tracking.find(track => track.productAt === role);
+    const matchingTrack = product.tracking.find(
+      (track) => track.productAt === role
+    );
 
     if (!matchingTrack) {
       return res.status(404).json({
@@ -141,20 +202,20 @@ router.patch("/:id", async (req, res) => {
       });
     }
 
-    if(matchingTrack.complete){
+    if (matchingTrack.complete) {
       return res.status(404).json({
         success: false,
         message: "Already updated",
       });
     }
-    if(!matchingTrack.complete){
-    const currentDate = new Date().toISOString().slice(0, 10); 
-    const currentTime = new Date().toLocaleTimeString(); 
-    matchingTrack.complete = true;
-    matchingTrack.date = currentDate;
-    matchingTrack.time = currentTime;
+    if (!matchingTrack.complete) {
+      const currentDate = new Date().toISOString().slice(0, 10);
+      const currentTime = new Date().toLocaleTimeString();
+      matchingTrack.complete = true;
+      matchingTrack.date = currentDate;
+      matchingTrack.time = currentTime;
     }
-  
+
     await product.save();
 
     res.status(200).json({
@@ -170,6 +231,5 @@ router.patch("/:id", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;
