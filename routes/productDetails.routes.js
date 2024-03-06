@@ -18,7 +18,7 @@ router.post("/", async (req, res) => {
     brand,
     category,
     salesPrice,
-    image,
+    image
   } = req.body;
 
   if (
@@ -51,37 +51,40 @@ router.post("/", async (req, res) => {
       });
     }
 
-    let data = [
-      {
-        productAt: "Us Warehouse",
-        date: new Date().toISOString().slice(0, 10),
-        time: new Date().toLocaleTimeString(),
-        complete: true,
-      },
-      {
-        productAt: "Medorna Office",
-        date: "",
-        time: "",
-        complete: false,
-      },
-      {
-        productAt: "",
-        date: "",
-        time: "",
-        complete: false,
-      },
-      {
-        productAt: "Amazone",
-        date: "",
-        time: "",
-        complete: false,
-      },
-    ];
+
+  let data =  [ {
+      "productAt": "Us Warehouse",
+      "date": new Date().toISOString().slice(0, 10),
+      "time": new Date().toLocaleTimeString(),
+      "complete": true
+    },
+    {
+      "productAt": "Medorna Office",
+      "date": "",
+      "time": "",
+      "complete": false
+      
+    },
+    {
+      "productAt": "",
+      "date": "",
+      "time": "",
+      "complete": false
+     
+    },
+    {
+      "productAt": "Amazone",
+      "date": "",
+      "time": "",
+      "complete": false
+     
+    }]
+
 
     const newProduct = new productDetailsModel({
       product: product,
-      createdDate: new Date().toISOString().slice(0, 10),
-      createdTime: new Date().toLocaleTimeString(),
+      createdDate:new Date().toISOString().slice(0, 10),
+      createdTime:new Date().toLocaleTimeString(),
       price: price,
       tracking: data,
       sku: sku,
@@ -92,8 +95,8 @@ router.post("/", async (req, res) => {
       tag: tag,
       brand: brand,
       category: category,
-      salesPrice: salesPrice,
-      image: image,
+      salesPrice:salesPrice,
+      image:image
     });
 
     await newProduct.save();
@@ -115,30 +118,22 @@ router.get("/", async (req, res) => {
   try {
     let query = {};
 
+    // Pagination
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+
     // Sort
     const { sortBy, sortOrder } = req.query;
     let sortOption = {};
     if (sortBy && sortOrder) {
-      sortOption[sortBy] = sortOrder === "asc" ? 1 : -1;
+      sortOption[sortBy] = sortOrder === 'asc' ? 1 : -1;
     }
 
     // Search
     const { search } = req.query;
     if (search) {
-      const searchFields = [
-        "brand",
-        "branchNumber",
-        "category",
-        "product",
-        "countryOfOrigin",
-        "description",
-        "sku",
-        "price",
-        "salesPrice",
-      ];
-      const searchConditions = searchFields.map((field) => ({
-        [field]: { $regex: search, $options: "i" },
-      }));
+      const searchFields = ['brand', 'branchNumber', 'category', 'product', 'countryOfOrigin'];
+      const searchConditions = searchFields.map(field => ({ [field]: { $regex: search, $options: 'i' } }));
       query.$or = searchConditions;
     }
 
@@ -148,15 +143,13 @@ router.get("/", async (req, res) => {
     if (category) query.category = category;
     if (countryOfOrigin) query.countryOfOrigin = countryOfOrigin;
 
-    const products = await productDetailsModel.find(query);
-    console.log("products", products);
-    if (sortBy && sortOrder) {
-      products = await products.sort(sortOption);
-    } else {
-      products = await products.toArray();
-    }
+    // Get total count of documents for pagination
+    const totalCount = await productDetailsModel.countDocuments(query);
 
-    res.json({ products });
+    // Sorting directly in the MongoDB query and applying pagination
+    let products = await productDetailsModel.find(query).sort(sortOption).skip(skip).limit(parseInt(limit));
+
+    res.json({ products, totalCount });
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({
@@ -165,6 +158,72 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
+
+// router.get("/", async (req, res) => {
+//   try {
+//     let products = await productDetailsModel.find();
+
+//     // Sorting
+//     const { sortBy, sortOrder } = req.query;
+//     if (sortBy && sortOrder) {
+//       products = products.sort((a, b) => {
+//         const sortValA = typeof a[sortBy] === 'string' ? a[sortBy].toLowerCase() : a[sortBy];
+//         const sortValB = typeof b[sortBy] === 'string' ? b[sortBy].toLowerCase() : b[sortBy];
+//         if (sortOrder === "asc") {
+//           return sortValA > sortValB ? 1 : -1;
+//         } else {
+//           return sortValA < sortValB ? 1 : -1;
+//         }
+//       });
+//     }
+
+//     // Searching
+//     const { search } = req.query;
+//     if (search) {
+//       const searchTerm = search.toLowerCase();
+//       products = products.filter((item) =>
+//         Object.values(item).some((value) =>
+//           typeof value === 'string' && value.toLowerCase().includes(searchTerm)
+//         )
+//       );
+//     }
+
+//     // Filtering
+//     const { brand, category, countryOfOrigin } = req.query;
+//     if (brand) {
+//       products = products.filter((item) => item.brand.toLowerCase() === brand.toLowerCase());
+//     }
+//     if (category) {
+//       products = products.filter((item) => item.category.toLowerCase() === category.toLowerCase());
+//     }
+//     if (countryOfOrigin) {
+//       products = products.filter((item) =>
+//         item.countryOfOrigin.toLowerCase() === countryOfOrigin.toLowerCase()
+//       );
+//     }
+
+//     res.json({
+//       success: true,
+//       products,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching products:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// });
+
+
+
+
+
+
+
+
+
 
 router.delete("/:id", async (req, res) => {
   const productId = req.params.id;
