@@ -29,6 +29,8 @@ const productDetails = new mongoose.Schema({
      brand:{type:String,require:true},
      category:{type:String,require:true},
      salesPrice:{type:String,require:true},
+     createdDate:{type:String,require:true},
+     createdTime:{type:String,require:true},
      image:[imageSchema],
      tracking:[trackingSchema]
 });
@@ -39,13 +41,3 @@ module.exports = {productDetailsModel}
 
 
 
-let data = {
-     product: "iphone",
-     price: "10000",
-     tracking: [
-{productAt:"Us Warehouse", date:"3/3/2024", time:"10:00PM", trackId:"us1234", complete:true},
-{productAt:"Medorna Office", date:"3/3/2024", time:"10:00PM", trackId:"us142433",complete:false},
-{productAt:"IGO Office", date:"3/3/2024", time:"10:00PM", trackId:"us134223",complete:false},
-{productAt:"Amazone", date:"3/3/2024", time:"10:00PM", trackId:"us122442345673",complete:false},
-]
-}

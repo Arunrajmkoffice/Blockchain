@@ -19,7 +19,7 @@ router.post("/", async (req, res) => {
         if (user) {
             if (password === user.password) { 
                 const secretKey = '123';
-                const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
+                const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '10h' });
                 res.json({ message: 'Login Success', token, email: user.email, role:user.role, userId: user._id});
             } else {
                 res.status(401).json({ message: 'Login failed: Incorrect password' });
