@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "All fields (product, price, tracking) are mandatory",
+      message: "All fields (product, price) are mandatory",
     });
   }
 
@@ -329,5 +329,28 @@ router.patch("/:id", async (req, res) => {
     });
   }
 });
+
+
+router.patch('/edit/:id', async (req, res) => {
+  const productId = req.params.id;
+  const updatedProductDetails = req.body;
+
+
+  if (Object.keys(updatedProductDetails).length === 0) {
+    return res.status(400).json({ststus:false, message: 'At least one field is required to edit the data' });
+  }
+
+  try { 
+    const updatedProduct = await productDetailsModel.findByIdAndUpdate(productId, updatedProductDetails, { new: true });
+    res.json({ststus:true, message: 'Product updated successfully' });
+  } catch (error) {
+    console.error('Error updating product details:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+
 
 module.exports = router;
