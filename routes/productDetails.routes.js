@@ -159,7 +159,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-
 // router.get("/", async (req, res) => {
 //   try {
 //     let products = await productDetailsModel.find();
@@ -215,15 +214,6 @@ router.get("/", async (req, res) => {
 //     });
 //   }
 // });
-
-
-
-
-
-
-
-
-
 
 router.delete("/:id", async (req, res) => {
   const productId = req.params.id;
