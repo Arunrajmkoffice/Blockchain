@@ -9,7 +9,7 @@ const productDetails = require('./routes/productDetails.routes');
 
 require("dotenv").config()
 
-const PORT = process.env.PORT||9090
+const PORT = process.env.PORT||9091
 app.use(cors());
 app.use(express.json());
 
@@ -19,7 +19,7 @@ app.use("/product", productDetails);
 
 
 app.listen(PORT,async()=>{
-console.log("Listining to port 9090")
+console.log("Listining to port 9091")
 
 try{
     await connection

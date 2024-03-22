@@ -243,9 +243,8 @@ router.delete("/:id", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   const productId = req.params.id;
-
   try {
-    const product = await productDetailsModel.findById(productId);
+    const product = await productDetailsModel.findById(productId)
     if (!product) {
       res.status(404).json({
         success: false,
@@ -258,6 +257,12 @@ router.get("/:id", async (req, res) => {
     }
   } catch (error) {
     console.error("Error fetching product:", error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+      });
+    }
     res.status(500).json({
       success: false,
       message: "Internal server error",
