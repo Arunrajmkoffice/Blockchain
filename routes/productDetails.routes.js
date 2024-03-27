@@ -42,14 +42,14 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    const existingProduct = await productDetailsModel.findOne({ product });
+    // const existingProduct = await productDetailsModel.findOne({ product });
 
-    if (existingProduct) {
-      return res.status(400).json({
-        success: false,
-        message: "Product already exists",
-      });
-    }
+    // if (existingProduct) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Product already exists",
+    //   });
+    // }
 
 
   let data =  [ {
@@ -66,14 +66,14 @@ router.post("/", async (req, res) => {
       
     },
     {
-      "productAt": "",
+      "productAt": "IGO Office",
       "date": "",
       "time": "",
       "complete": false
      
     },
     {
-      "productAt": "Amazone",
+      "productAt": "Amazone Office",
       "date": "",
       "time": "",
       "complete": false
@@ -113,6 +113,139 @@ router.post("/", async (req, res) => {
     });
   }
 });
+
+
+
+
+// router.post("/", async (req, res) => {
+//   const {
+//     product,
+//     price,
+//     sku,
+//     branchNumber,
+//     countryOfOrigin,
+//     inventory,
+//     description,
+//     tag,
+//     brand,
+//     category,
+//     salesPrice,
+//     image
+//   } = req.body;
+
+//   if (
+//     !product ||
+//     !price ||
+//     !sku ||
+//     !branchNumber ||
+//     !countryOfOrigin ||
+//     !inventory ||
+//     !description ||
+//     !tag ||
+//     !brand ||
+//     !category ||
+//     !salesPrice ||
+//     !image
+//   ) {
+//     return res.status(400).json({
+//       success: false,
+//       message: "All fields (product, price) are mandatory",
+//     });
+//   }
+
+//   try {
+//     let productName = product.trim();
+//     let productCount = 1;
+
+//     // Check if a product with the same name already exists
+//     const existingProduct = await productDetailsModel.findOne({ product: productName });
+
+//     if (existingProduct) {
+//       // Extract the count from the product name (if it exists)
+//       const match = productName.match(/-(\d+)$/);
+//       if (match) {
+//         // Update the count and remove it from the product name
+//         productCount = parseInt(match[1]) + 1;
+//         productName = productName.replace(/-\d+$/, '');
+//       } else {
+//         // If no count exists, find the highest count for the product
+//         const similarProducts = await productDetailsModel.find({ product: { $regex: new RegExp('^' + productName + '-[0-9]*$', 'i') } });
+//         if (similarProducts.length > 0) {
+//           const counts = similarProducts.map(p => parseInt(p.product.split('-').pop()));
+//           productCount = Math.max(...counts) + 1;
+//         } else {
+//           // If no similar products exist, append '-2' to the product name
+//           productCount = 2;
+//         }
+//       }
+//     }
+
+//     // Append the count to the product name
+//     productName += `-${productCount}`;
+
+//     // Create the new product document
+//     let data = [{
+//         "productAt": "Us Warehouse",
+//         "date": new Date().toISOString().slice(0, 10),
+//         "time": new Date().toLocaleTimeString(),
+//         "complete": true
+//       },
+//       {
+//         "productAt": "Medorna Office",
+//         "date": "",
+//         "time": "",
+//         "complete": false
+//       },
+//       {
+//         "productAt": "IGO Office",
+//         "date": "",
+//         "time": "",
+//         "complete": false
+//       },
+//       {
+//         "productAt": "Amazone",
+//         "date": "",
+//         "time": "",
+//         "complete": false
+//       }
+//     ];
+
+//     const newProduct = new productDetailsModel({
+//       product: productName,
+//       createdDate: new Date().toISOString().slice(0, 10),
+//       createdTime: new Date().toLocaleTimeString(),
+//       price: price,
+//       tracking: data,
+//       sku: sku,
+//       branchNumber: branchNumber,
+//       countryOfOrigin: countryOfOrigin,
+//       inventory: inventory,
+//       description: description,
+//       tag: tag,
+//       brand: brand,
+//       category: category,
+//       salesPrice: salesPrice,
+//       image: image
+//     });
+
+//     await newProduct.save();
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Product created successfully",
+//     });
+//   } catch (error) {
+//     console.error("Error creating product:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// });
+
+
+
+
 
 router.get("/", async (req, res) => {
   try {

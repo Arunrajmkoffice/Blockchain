@@ -6,6 +6,7 @@ const signinRoutes = require('./routes/signin.routes');
 const signupRoutes = require('./routes/signup.routes');
 
 const productDetails = require('./routes/productDetails.routes');
+// const ai = require('./routes/ai.routes');
 
 require("dotenv").config()
 
@@ -16,7 +17,7 @@ app.use(express.json());
 app.use("/signup", signupRoutes);
 app.use("/signin", signinRoutes);
 app.use("/product", productDetails);
-
+// app.use("/ai", ai);
 
 app.listen(PORT,async()=>{
 console.log("Listining to port 9091")
