@@ -1,10 +1,126 @@
 const { Router } = require("express");
+const { v4: uuidv4 } = require('uuid');
 const { productDetailsModel } = require("../module/productDetails.model");
 const authenticateToken = require("../middleware/authenticateToken");
 const router = Router();
 
 router.use(authenticateToken);
 
+const crypto = require("crypto");
+
+function generateImageName(imageData) {
+  const hash = crypto.createHash("sha1").update(imageData).digest("hex");
+  return hash.slice(0, 10); // Get the first 10 characters of the hash
+}
+
+// router.post("/", async (req, res) => {
+//   const {
+//     product,
+//     price,
+//     sku,
+//     branchNumber,
+//     countryOfOrigin,
+//     inventory,
+//     description,
+//     tag,
+//     brand,
+//     category,
+//     salesPrice,
+//     image
+//   } = req.body;
+
+//   if (
+//     !product ||
+//     !price ||
+//     !sku ||
+//     !branchNumber ||
+//     !countryOfOrigin ||
+//     !inventory ||
+//     !description ||
+//     !tag ||
+//     !brand ||
+//     !category ||
+//     !salesPrice ||
+//     !image
+//   ) {
+//     return res.status(400).json({
+//       success: false,
+//       message: "All fields (product, price) are mandatory",
+//     });
+//   }
+
+//   try {
+//     // const existingProduct = await productDetailsModel.findOne({ product });
+
+//     // if (existingProduct) {
+//     //   return res.status(400).json({
+//     //     success: false,
+//     //     message: "Product already exists",
+//     //   });
+//     // }
+
+//   let data =  [ {
+//       "productAt": "Us Warehouse",
+//       "date": new Date().toISOString().slice(0, 10),
+//       "time": new Date().toLocaleTimeString(),
+//       "complete": true
+//     },
+//     {
+//       "productAt": "Medorna Office",
+//       "date": "",
+//       "time": "",
+//       "complete": false
+
+//     },
+//     {
+//       "productAt": "IGO Office",
+//       "date": "",
+//       "time": "",
+//       "complete": false
+
+//     },
+//     {
+//       "productAt": "Amazone Office",
+//       "date": "",
+//       "time": "",
+//       "complete": false
+
+//     }]
+
+//     const newProduct = new productDetailsModel({
+//       product: product,
+//       createdDate:new Date().toISOString().slice(0, 10),
+//       createdTime:new Date().toLocaleTimeString(),
+//       price: price,
+//       tracking: data,
+//       sku: sku,
+//       branchNumber: branchNumber,
+//       countryOfOrigin: countryOfOrigin,
+//       inventory: inventory,
+//       description: description,
+//       tag: tag,
+//       brand: brand,
+//       category: category,
+//       salesPrice:salesPrice,
+//       image:image
+//     });
+
+//     await newProduct.save();
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Product created successfully",
+//     });
+//   } catch (error) {
+//     console.error("Error creating product:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// });
+
+//----------------------------------------------------------------------------------------
 router.post("/", async (req, res) => {
   const {
     product,
@@ -18,7 +134,7 @@ router.post("/", async (req, res) => {
     brand,
     category,
     salesPrice,
-    image
+    image,
   } = req.body;
 
   if (
@@ -42,49 +158,82 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    // const existingProduct = await productDetailsModel.findOne({ product });
+    let data = [
+      {
+        productAt: "Us Warehouse",
+        date: new Date().toISOString().slice(0, 10),
+        time: new Date().toLocaleTimeString(),
+        complete: true,
+      },
+      {
+        productAt: "Medorna Office",
+        date: "",
+        time: "",
+        complete: false,
+      },
+      {
+        productAt: "IGO Office",
+        date: "",
+        time: "",
+        complete: false,
+      },
+      {
+        productAt: "Amazone Office",
+        date: "",
+        time: "",
+        complete: false,
+      },
+    ];
 
-    // if (existingProduct) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Product already exists",
-    //   });
-    // }
 
 
-  let data =  [ {
-      "productAt": "Us Warehouse",
-      "date": new Date().toISOString().slice(0, 10),
-      "time": new Date().toLocaleTimeString(),
-      "complete": true
-    },
-    {
-      "productAt": "Medorna Office",
-      "date": "",
-      "time": "",
-      "complete": false
-      
-    },
-    {
-      "productAt": "IGO Office",
-      "date": "",
-      "time": "",
-      "complete": false
-     
-    },
-    {
-      "productAt": "Amazone Office",
-      "date": "",
-      "time": "",
-      "complete": false
-     
-    }]
 
+    const generateUniqueProductName = async (productName, count = 1) => {
+      // Split the product name into name and count (if it already has a count)
+      const nameParts = productName.split('-');
+      const lastPart = nameParts[nameParts.length - 1];
+      const existingCount = isNaN(parseInt(lastPart)) ? null : parseInt(lastPart);
+    
+      // If the product name already has a count, use that count
+      // Otherwise, use the provided count (default is 1)
+      const currentCount = existingCount !== null ? existingCount : count;
+    
+      // Get the name by removing the last part if it's a count
+      const name = existingCount !== null ? nameParts.slice(0, -1).join('-') : productName;
+    
+      const existingProduct = await productDetailsModel.findOne({ product: productName }).sort({ createdDate: -1 });
+    
+      if (existingProduct) {
+        // Increment the count and generate a new product name
+        const newCount = currentCount + 1;
+        const newProductName = `${name}-${newCount}`;
+        // Recursively check again with the new product name
+        return generateUniqueProductName(newProductName, newCount);
+      } else {
+        return productName;
+      }
+    };
+
+
+    
+    // Generate a unique product name
+    const uniqueProduct = await generateUniqueProductName(product);
+    const modifiedProductName = uniqueProduct.replace(/\s+/g, '-').toLowerCase();
+   
+console.log("modifiedProductName",modifiedProductName)
+
+    const imageLinks = [];
+
+    for (const img of image) {
+      const imageType = img.imagedata.split(";")[0].split("/")[1];
+      const imageLink = `${generateImageName(img.imagedata)}.${imageType}`;
+      imageLinks.push({ imageData: img.imagedata, id: img.id });
+    }
 
     const newProduct = new productDetailsModel({
-      product: product,
-      createdDate:new Date().toISOString().slice(0, 10),
-      createdTime:new Date().toLocaleTimeString(),
+      product: uniqueProduct,
+      createdDate: new Date().toISOString().slice(0, 10),
+      createdTime: new Date().toLocaleTimeString(),
       price: price,
       tracking: data,
       sku: sku,
@@ -95,8 +244,9 @@ router.post("/", async (req, res) => {
       tag: tag,
       brand: brand,
       category: category,
-      salesPrice:salesPrice,
-      image:image
+      salesPrice: salesPrice,
+      image: imageLinks,
+      id:modifiedProductName
     });
 
     await newProduct.save();
@@ -104,6 +254,7 @@ router.post("/", async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Product created successfully",
+      data: newProduct,
     });
   } catch (error) {
     console.error("Error creating product:", error);
@@ -113,9 +264,7 @@ router.post("/", async (req, res) => {
     });
   }
 });
-
-
-
+//----------------------------------------------------------------------------------------
 
 // router.post("/", async (req, res) => {
 //   const {
@@ -247,6 +396,16 @@ router.post("/", async (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
+
+
 router.get("/", async (req, res) => {
   try {
     let query = {};
@@ -259,14 +418,22 @@ router.get("/", async (req, res) => {
     const { sortBy, sortOrder } = req.query;
     let sortOption = {};
     if (sortBy && sortOrder) {
-      sortOption[sortBy] = sortOrder === 'asc' ? 1 : -1;
+      sortOption[sortBy] = sortOrder === "asc" ? 1 : -1;
     }
 
     // Search
     const { search } = req.query;
     if (search) {
-      const searchFields = ['brand', 'branchNumber', 'category', 'product', 'countryOfOrigin'];
-      const searchConditions = searchFields.map(field => ({ [field]: { $regex: search, $options: 'i' } }));
+      const searchFields = [
+        "brand",
+        "branchNumber",
+        "category",
+        "product",
+        "countryOfOrigin",
+      ];
+      const searchConditions = searchFields.map((field) => ({
+        [field]: { $regex: search, $options: "i" },
+      }));
       query.$or = searchConditions;
     }
 
@@ -280,7 +447,11 @@ router.get("/", async (req, res) => {
     const totalCount = await productDetailsModel.countDocuments(query);
 
     // Sorting directly in the MongoDB query and applying pagination
-    let products = await productDetailsModel.find(query).sort(sortOption).skip(skip).limit(parseInt(limit));
+    let products = await productDetailsModel
+      .find(query)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(parseInt(limit));
 
     res.json({ products, totalCount });
   } catch (error) {
@@ -352,7 +523,7 @@ router.delete("/:id", async (req, res) => {
   const productId = req.params.id;
 
   try {
-    const result = await productDetailsModel.findByIdAndDelete(productId);
+    const result = await productDetailsModel.findOneAndDelete({ product: productId });
 
     if (!result) {
       res.status(404).json({
@@ -377,7 +548,7 @@ router.delete("/:id", async (req, res) => {
 router.get("/:id", async (req, res) => {
   const productId = req.params.id;
   try {
-    const product = await productDetailsModel.findById(productId)
+    const product = await productDetailsModel.findById(productId);
     if (!product) {
       res.status(404).json({
         success: false,
@@ -390,7 +561,7 @@ router.get("/:id", async (req, res) => {
     }
   } catch (error) {
     console.error("Error fetching product:", error);
-    if (error.name === 'CastError') {
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
         message: "Invalid product ID",
@@ -458,27 +629,30 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
-
-router.patch('/edit/:id', async (req, res) => {
+router.patch("/edit/:id", async (req, res) => {
   const productId = req.params.id;
   const updatedProductDetails = req.body;
 
-
   if (Object.keys(updatedProductDetails).length === 0) {
-    return res.status(400).json({ststus:false, message: 'At least one field is required to edit the data' });
+    return res
+      .status(400)
+      .json({
+        ststus: false,
+        message: "At least one field is required to edit the data",
+      });
   }
 
-  try { 
-    const updatedProduct = await productDetailsModel.findByIdAndUpdate(productId, updatedProductDetails, { new: true });
-    res.json({ststus:true, message: 'Product updated successfully' });
+  try {
+    const updatedProduct = await productDetailsModel.findByIdAndUpdate(
+      productId,
+      updatedProductDetails,
+      { new: true }
+    );
+    res.json({ ststus: true, message: "Product updated successfully" });
   } catch (error) {
-    console.error('Error updating product details:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error updating product details:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
-
-
 
 module.exports = router;

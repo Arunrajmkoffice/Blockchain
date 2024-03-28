@@ -32,7 +32,8 @@ const productDetails = new mongoose.Schema({
      createdDate:{type:String,require:true},
      createdTime:{type:String,require:true},
      image:[imageSchema],
-     tracking:[trackingSchema]
+     tracking:[trackingSchema],
+     id: { type: String, required: true, unique: true }
 });
 
 

@@ -4,10 +4,12 @@ const app = express();
 const {connection} = require('./config/db');
 const signinRoutes = require('./routes/signin.routes');
 const signupRoutes = require('./routes/signup.routes');
-
+const bodyParser = require('body-parser');
 const productDetails = require('./routes/productDetails.routes');
+const convertAndSave = require('./routes/convert-and-save.routes');
 // const ai = require('./routes/ai.routes');
-
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 require("dotenv").config()
 
 const PORT = process.env.PORT||9091
@@ -17,6 +19,8 @@ app.use(express.json());
 app.use("/signup", signupRoutes);
 app.use("/signin", signinRoutes);
 app.use("/product", productDetails);
+app.use("/convert", convertAndSave);
+
 // app.use("/ai", ai);
 
 app.listen(PORT,async()=>{
