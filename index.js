@@ -8,9 +8,11 @@ const userScan = require('./routes/userScan.routes')
 const password = require('./routes/password.routes');
 const subuser = require('./routes/subuser.routes');
 const vendor = require('./routes/vendor.routes');
+const imageRoute = require('./routes/image.routes');
 const bodyParser = require('body-parser');
 const productDetails = require('./routes/productDetails.routes');
 const convertAndSave = require('./routes/convert-and-save.routes');
+
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 require("dotenv").config()
@@ -26,6 +28,7 @@ app.use("/password", password);
 app.use("/subuser", subuser);
 app.use("/user-scan", userScan);
 app.use("/vendor", vendor);
+app.use("/image", imageRoute);
 app.use(cors());
 app.use(express.json());
 

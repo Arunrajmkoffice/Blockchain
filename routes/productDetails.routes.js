@@ -1,13 +1,14 @@
 const { Router } = require("express");
 const { v4: uuidv4 } = require('uuid');
 const { productDetailsModel } = require("../module/productDetails.model");
+const { userModel } = require("../module/user.model");
 const authenticateToken = require("../middleware/authenticateToken");
 const axios = require('axios');
 const router = Router();
 router.use(authenticateToken);
 
-const embedingUrl = ''
-const hfToken =  ''
+const embedingUrl = 'https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2'
+const hfToken =  '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'
 
 async function generateEmbedding(text){
     try {
@@ -44,6 +45,7 @@ function generateImageName(imageData) {
 }
 
 router.post("/", async (req, res) => {
+  
   const {
     product,
     price,
@@ -206,6 +208,7 @@ async function generateQRCode() {
       message: "Product created successfully",
       data: newProduct,
     });
+    
   } catch (error) {
     console.error("Error creating product:", error);
     res.status(500).json({
@@ -216,7 +219,8 @@ async function generateQRCode() {
 });
 
 router.get("/", async (req, res) => {
-  const {vendorId} = req.query
+  const {vendorId,role} = req.query
+
   try {
     let query = {};
 
@@ -254,16 +258,46 @@ router.get("/", async (req, res) => {
 
 
     const totalCount = await productDetailsModel.countDocuments(query);
+    if(role===undefined){
+      res.json({
+        success: false,
+        message: "Role is missing",
+      });
+     }
+  
 
-   
-    
-    let products = await productDetailsModel
-      .find({ ...query, vendorId: vendorId })
+     if(role){
+    if((vendorId==="all" && role==="Medorna Office")||role==="IGO Office" || role==="Amazon Office"){
+      let products = await productDetailsModel
+      .find({...query})
       .sort(sortOption)
       .skip(skip)
       .limit(parseInt(limit));
     res.json({ products, totalCount:products.length });
+     }
 
+
+
+     
+    
+
+
+
+
+     if((role==="Medorna Office"&& vendorId!=="all") || role==="Us Warehouse" ){
+      let products = await productDetailsModel
+      .find({ ...query, vendorId: vendorId })
+      .sort(sortOption)
+      .skip(skip)
+      .limit(parseInt(limit));
+      res.json({ products, totalCount:products.length });
+    }
+
+   }
+   
+    
+    
+  
 
   } catch (error) {
     console.error("Error fetching products:", error);
