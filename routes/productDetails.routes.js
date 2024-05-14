@@ -6,7 +6,7 @@ const authenticateToken = require("../middleware/authenticateToken");
 const axios = require('axios');
 const router = Router();
 router.use(authenticateToken);
-
+const { uploadImage } = require("./uploadImage.route");
 const embedingUrl = 'https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2'
 const hfToken =  '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'
 
@@ -38,6 +38,7 @@ async function generateUniqueIds(count) {
 }
 
 const crypto = require("crypto");
+
 
 function generateImageName(imageData) {
   const hash = crypto.createHash("sha1").update(imageData).digest("hex");
@@ -145,13 +146,12 @@ router.post("/", async (req, res) => {
     const modifiedProductName = uniqueProduct.replace(/\s+/g, '-').toLowerCase();
    
 
-
+   
     const imageLinks = [];
 
     for (const img of image) {
-      const imageType = img.imageData.split(";")[0].split("/")[1];
-      const imageLink = `${generateImageName(img.imageData)}.${imageType}`;
-      imageLinks.push({ imageData: img.imageData, id: img.id });
+      const imageUrl = await uploadImage(img.imageData);
+      imageLinks.push({ imageData: imageUrl, id: img.id });
     }
   
 let vText = `${uniqueProduct} ${description} ${brand} ${category} ${tag}`

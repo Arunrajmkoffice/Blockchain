@@ -1,64 +1,42 @@
-const { Router } = require("express");
-const { imageModel } = require("../module/image.model");
+const express = require('express');
 const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
-const cloudinary = require('cloudinary').v2;
+const path = require('path');
+const { imageModel } = require('../module/image.model');
+const cloudinary = require('../config/cloudinary');
 
-// Configure Cloudinary with your credentials
-cloudinary.config({
-  cloud_name: "dnbclknau", 
-  api_key: "838397141496413", 
-  api_secret: "REdRIEY6_448yQUSFupiN7aGcvY"
-});
+const router = express.Router();
 
-const router = Router(); // Create an instance of Router
+// Helper function to extract base64 data and image format
+function extractBase64AndFormat(imageData) {
+    const matches = imageData.match(/^data:image\/(\w+);base64,(.*)$/);
+    if (!matches) {
+        throw new Error('Invalid image data');
+    }
+    const format = matches[1];
+    const base64Data = matches[2];
+    return { format, base64Data };
+}
 
+// Route to upload image
 router.post('/', async (req, res) => {
     try {
-      // Extract image data from request body
-      const imageData = req.body.imageData;
-  
-      // Extract base64 data part
-      const base64Data = imageData.split(';base64,').pop();
-  
-      // Decode base64 data
-      const decodedImage = Buffer.from(base64Data, 'base64');
-  
-      // Generate a unique filename
-      const filename = `${uuidv4()}.jpg`;
+        const { imageData } = req.body;
+        const { format, base64Data } = extractBase64AndFormat(imageData);
 
-      // Write the decoded image data to a temporary file
-      const tempFilePath = `temp/${filename}`;
-      fs.writeFileSync(tempFilePath, decodedImage);
-  
-      // Upload the temporary file to Cloudinary
-      const uploadedImage = await cloudinary.uploader.upload(tempFilePath, {
-        public_id: `uploads/${filename}`, // Optional: Specify folder and filename
-        resource_type: 'image' // Specify the type of resource being uploaded
-      });
+        // Upload image to Cloudinary
+        const result = await cloudinary.uploader.upload(`data:image/${format};base64,${base64Data}`, {
+            folder: 'uploads'
+        });
 
-      // Delete the temporary file
-      fs.unlinkSync(tempFilePath);
-  
-      // Get the public URL of the uploaded image from Cloudinary
-      const imageUrl = uploadedImage.secure_url;
-  
-      // Save the image document to MongoDB (if needed)
-      const newImage = new imageModel({
-        filename: uploadedImage.public_id, // You can save Cloudinary's public_id if needed
-        originalname: filename,
-        mimetype: 'image/jpeg',
-        size: uploadedImage.bytes,
-        path: imageUrl
-      });
-      await newImage.save();
-  
-      // Return the image URL
-      res.json({ imageUrl });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
+        // Save the file path in MongoDB
+        const newImage = new imageModel({ path: result.secure_url });
+        await newImage.save();
+
+        res.json({ message: 'Image uploaded successfully', imageUrl: result.secure_url });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while uploading the image' });
     }
-  });
+});
 
 module.exports = router;
